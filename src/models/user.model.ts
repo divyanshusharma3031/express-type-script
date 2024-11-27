@@ -63,6 +63,6 @@ userSchema.pre("save",async function(next:HookNextFunction){//^ This code snippe
 
 
 
-const UserModel = mongoose.model("user", userSchema);
+const UserModel = mongoose.model<UserDocument>("user", userSchema);// model takes a generic we pass document here( refer to mongodb typescript schema on google on ther official site)
 
 export default UserModel;
