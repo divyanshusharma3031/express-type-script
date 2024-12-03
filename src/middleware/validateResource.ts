@@ -5,7 +5,7 @@ const validate=(schema:AnyZodObject)=>(req:Request,res:Response,next:NextFunctio
     try{
         schema.parse({
             body:req.body,
-            quert:req.query,
+            query:req.query,
             params:req.params
         })
         next();

@@ -22,3 +22,6 @@ Lodash _.get() method is a utility function that retrieves the value of a nested
 
 Lodash _.get() method is used to get the value at the path of the object. If the resolved value is undefined, the default value is returned in its place.
 
+# Types vs Interfaces 
+// Refer to comment in product.controller.ts
+TLDR : https://chatgpt.com/share/674b1863-c464-8001-8258-35838aafdcae
