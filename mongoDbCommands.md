@@ -89,9 +89,24 @@ db.<collection_name>.drop()
 
 17) Lookup command in mongodb reference relation - when you have a referenced collection it will expand those referenced field while getting . Its syntax is like this -
 ```
-db.<collection_name>.aggregate([{$lookup:{from:"the Referenced collection",localfield:"what is the field name in the collection_name",foreignField:"to which the local field is linked",as:"The alias You want to give"}}]);
+db.<collection_name>.aggregate([{$lookup:{from:"the Referenced collection jiski reference id dali hui hai idhar",localfield:"what is the field name in the collection_name",foreignField:"to which the local field is linked",as:"The alias You want to give"}}]);
 
 // we are passing an array to the aggregate function as aggregation can be done fpr multiple condition we will learn it later.
+```
+
+18) nested LookUps : https://stackoverflow.com/questions/36019713/mongodb-nested-lookup-with-3-levels
+
+2nd method : https://www.mongodb.com/community/forums/t/nested-lookup-aggregation/224456
+
+
+Implementing 1st  :
+```
+db.users.aggregate([{$lookup:{from:"posts",localField:"posts",foreignField:"_id",as:"posts"}},{$unwind: {
+    path: "$posts",
+    preserveNullAndEmptyArrays: true
+}},{$lookup:{from:"users",localField:"posts.comments.author",foreignField:"_id",as:"commentedBy"}}]);
+
+// Notice we have to give the whole posts.comments.author ( pura path wrt the <collection_name> use karna padega)
 ```
 
 ## Data Type limits in MongoDb
@@ -134,3 +149,4 @@ db.collection('wealth').insert( {
 });
 ```
 By browsing the APIdocs for the driver you're using, you'll be able to identify the methods for building int32s, int64s etc.
+
