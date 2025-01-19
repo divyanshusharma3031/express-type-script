@@ -133,7 +133,7 @@ mongod --logPath <something/logs.log> :
 mongod -f <path to your config file> 
 ```
 
-- Examp;e confog file :
+- Example config file :
 
 ```
 storage:
@@ -141,6 +141,312 @@ storage:
 systemLog:
   destination:  file
   path: "/your/path/to/the/logs.log"
+```
+
+24) To import a json file :
+
+```
+mongoimport <name of file you wanna import> -d <database you wanna impor this file to> -c <collection jisme import karna hai> --jsonArrray --drop
+
+--jsonArray : signifies the imported data is an array of json
+--drop : it will drop the movies collection if it exits , if you do not specify this . The data will be appended to the movies collection if it exists ( may be the behaviour you want )
+```
+
+
+## Query Operators Commands in MongoDb:
+
+Here is the official documentation - https://www.mongodb.com/docs/manual/reference/operator/query-comparison/
+
+Let's quickly discuss one query operator here 
+
+25) $gt operator :
+```
+db.<collection_name>.find({ field: { $gt: value } })
+```
+26) To query an nested / embedded document :
+
+```
+db.<collection_name>.find({"field.nestedField":<value>})
+
+/*
+For example : 
+For this document in the inventory - 
+*/
+{
+  item: 'journal',
+  qty: 25,
+  size: { h: 14, w: 21, uom: 'cm' },
+  status: 'A'
+}
+
+// We have This command
+
+db.inventory.find({
+  "size.uom": 'in'
+})
+
+```
+27) When using the query for an array inside a collection , it checks for inclusivity not equality .
+
+```
+//If you do this
+
+db.movies.find({"genres":"Drama"})
+
+// For Collection :
+[
+  {
+    "name:"Shutter Island",
+    "genres":["Thriller","Drama"]
+  }
+]
+// It will still select the movie shutter island as Drama is present in this erray 
+```
+- **For exact equality , use this instead** :
+
+```
+db.movies.find({"genres":["Drama"]})
+```
+
+
+### Logical Operators :
+
+28) $or and $nor : $or gives final result by doing Union ( taking or ) , $nor is  just !$or which means Set - Union.
+
+
+Syntax :
+
+```
+db.<collection>.find({$or:[<array of normal filter>]});
+```
+
+Example query :
+
+```
+db.movies
+.find({
+  $or: [{ "rating.average": { $gt: 9.3 } }, { "rating.average": { $lt: 5 } }],
+})
+.count();
+```
+
+29) The $and operator : 
+Returns the intersection of set
+
+Example Query :
+
+```
+db.movies
+  .find({ $and: [{ "rating.average": { $gt: 9 } }, { genres: "Drama" }] })
+  .count();
+```
+There is a short of doing this :
+
+```
+db.movies.find({
+   "rating.average":{$gt:9},
+   genres:"Drama"
+}).count()
+```
+
+General syntax :
+
+db.<collection_name>.find({key1,key2,key3}); These keys will be treated as and
+
+So why do we need an $and operator through ?
+
+Suppose in document we have :
+```
+{
+  "genres":["drama","horror"] // Just for example to show the schema there may be other docs say having "genres":["horror" , "thriller"]
+}
+```
+
+Now we want to query the genres having both drama and horror 
+
+So wen cant do like thus
+```
+db.movies.find({ genres: "Horror", genres: "Drama" }).count();
+```
+
+As the keys are the same and the later wali ki key value will be used so it is equivalent to :
+```
+db.movies.find({genres: "Drama" }).count();
+```
+
+30) You can use multiple operators for a field , for example You wanna check the documents where the age field exists and is greater than 30 ( although this is a bad example to show case but just see the syntax and be aware that this is something that we also can do ):
+
+```
+db.users.find({age:{$exists:true,$gt:30}});
+```
+A better example for this will be to get all the documents where there exists an age field but the value is not equal to null.
+
+
+```
+[
+  {
+    name:"Divyanshu",
+    age:20
+  },
+  {
+    name:"Gaurav"
+  },
+  {
+    name:"Harjas",
+    age:null// so Technically the field exists but the corresponding value is not present
+  }
+]
+```
+
+The corresponding query will be :
+
+```
+db.users.find({age:{$exists:true,$ne:null}});
+```
+31) $type operator : Example is to find all the documents having type of phone number as number.
+
+Query :
+```
+db.users.find({ phone: { $type: "number" } });
+```
+
+**You can also pass more than 1 type as an array.**
+
+32) $expr operator : Suppose in this document - 
+```
+sales = [
+  { volume: 100, target: 120 },
+  { volume: 89, target: 80 },
+  { volume: 200, target: 177 },
+];
+
+```
+You want to find all the documents where value of volume > target .
+
+```
+db.sales.find({$expr:{$gt:["$volume","$target"]}})
+```
+
+Check out This for more - https://www.mongodb.com/docs/manual/reference/operator/query/expr/
+
+## Quering Arrays :
+
+32) Suppose in The below document You want to find all the documents having title as sports in hobbies.
+
+```
+users = [
+  {
+    _id: ObjectId("678cd9cef83964fd26a69f7a"),
+    name: "Max",
+    hobbies: [
+      {
+        title: "sports",
+        frequency: 3,
+      },
+      {
+        title: "cooking",
+        frequency: 6,
+      },
+    ],
+    phone: 1234,
+  },
+  {
+    _id: ObjectId("678cd9cef83964fd26a69f7b"),
+    name: "Manual",
+    hobbies: [
+      {
+        title: "cooking",
+        frequency: 5,
+      },
+      {
+        title: "cars",
+        frequency: 2,
+      },
+    ],
+    phone: "1234566",
+    age: 30,
+  },
+];
+```
+Then You can use the same syntax as embedded document and mongo is smart enough to look through all the document present in that array.
+
+Here  is the associated Query :
+
+```
+db.users.find({"hobbies.title":"cooking"}).pretty()
+```
+
+33) $size operator : suppose in the previous document You want to find all the documents where the user have 3 hobbies , then the query will be like this .
+```
+db.users.find({hobbies:{$size:3}}) ;// Note we can only find exact size as of yet
+```
+
+34) $all operator : suppose you want to find all movies where the generes are exactly ["action","thriller"] but do not care about the order i.e it can be ["thriller","action"] then you can't use the normal find :
+
+```
+db.movies.find({"genres":["action","thriller"]});// This won't work as this will look for exact match
+```
+
+To solve this problem
+- one way is to write all the combination as $or which is too costly
+- other way is to use $all with $size.
+
+$all - will check all the documents which includes the fields that you pass as an array
+
+The query with $all and $size will look like this :
+```
+db.movies.find({ genre: { $all: ["action", "thriller"], $size: 2 } });
+
+// First we got all the documents that has the fields including action and thriller and then $size : 2 will return only those which has size two i.e return only which has ["action','thriller'] , the order doesn't matter. 
+```
+
+35) In the user collection we want to find all the documents in which hobbies have title as "Cooking" and frequency as 3.
+
+Now if you run a normal add query since it is an array it will traverse through the objects and return the document in which either one of the title or frequency is matched , but we want the exact nested document to match i.e we want hobbies : [{title:"Cooking",frequency:3}] , not hobbies : [{title:"Cooking",frequency:2},{"title":"Sports",frequency:3}].<--- normal query will return this document as well . 
+
+In this case we will use the $elemMatch operator.The query will look like this :
+
+```
+db.users.find({hobbies:{$elemMatch:{title:"sports",frequency:3}}}).pretty()
+```
+
+## Cursors in MongoDb 
+
+36) Better to learn directly from the docs : https://www.mongodb.com/docs/manual/reference/method/js-cursor/ 
+However we will see some queries.
+
+37) Sorting Cursor result :
+
+```
+db.<collection_name>.find().sort({"field on which the sorting will be based":<value>})
+```
+value - 1 : Means ascending , -1 : means descending
+
+38) Skip and Limit : skip and limit are similar both takes a number as an argument . Skip skips the n number of documents where n is the parameter passed .
+
+Limit on the other hand limit the data on the cursor
+
+## Using projections to shape our results :
+
+We have already discussed it before  , so we will discuss miscellaneous cases here .
+
+39) Using projection with arrays :
+
+Suppose You want to filter all the arrays having genre including drama but for some strange reason wants the output to only have Horror genre . You can do this by this :
+```
+db.movies.find({"genres":"Drama"},{"genres":{$elemMatch:{$eq:"Horror"}}});
+```
+
+40) $slice operator : Just like the normal slice gives the subarray of a field.
+
+Syntax :
+```
+db.<collection_name>.find({},{fieldName:{$slice:[startingIndex,numberOfItems]}});
+```
+
+Example query :
+```
+db.movie.find({},{name:1,genres:{$slice:[0,1]}});
 ```
 ## Data Type limits in MongoDb
 
