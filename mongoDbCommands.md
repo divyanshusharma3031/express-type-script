@@ -448,6 +448,77 @@ Example query :
 ```
 db.movie.find({},{name:1,genres:{$slice:[0,1]}});
 ```
+
+## Update Commands in Mongodb 
+WE have discussed the basic commands so let's discuss operators here :
+
+41) $push operator : As the name suggest will push an element in the **Array**.
+
+
+General Syntax :
+
+```
+db.<collection_name>.find({filter},{$push:{field_name:<value>}})
+```
+
+Example command :
+
+```
+db.users.updateOne(
+  { name: "Chris" },
+  { $push: { hobbies: { title: "Cooking", frequency: 3 } } }
+);
+```
+
+You can also use $each to insert more than 1 emebedded doc at once. 
+
+42) $inc and $dec : Suppopse you want to increment salary of all the people who have more than 2 yrs of experience by 10k . Then you can use the increment operator
+Query : 
+```
+db.users.updateMany({ exp: { $gt: 2 } }, { $inc: { salary: 10000 } });
+```
+
+43) $mul : multiple the field by x .
+Query :
+```
+db.users.updateMany({},{$mul:{age:2}}) // multiplies the age of all the users by 2.
+```
+
+44) $min : Suppose you want to change the price of a product to let's say x . But you also want that the operation should only be applied to those prices who are greater than equal to x. In other words you want to change those values where the value is minimum equal to x . For that you can do this -
+
+[ Discount chal raha hai and you want to set the prices of all the items whose price is >=10000 to 10000. ]
+
+```
+db.products.updateMany({},{$min:{price:10000}})
+```
+
+45) $unset- Completely remove the field specified:
+```
+db.<collection>.updateOne({},{$unset:{field_name:""}});// typically we pass an empty string for unsetting.
+```
+
+46) Renaming a field :
+
+```
+db.<collection_name>.updateMany({},{$rename:{old_name:"new_name"}}); // or updateONe whatever your use case is. // Note that the new name is inside quotes.
+```
+
+47) upsert : There is a third argument in the updateCommand which is upsert -// Works for both updateOne and updateMany 
+
+if there is a match it will update otherwise create 
+
+More about this - https://www.geeksforgeeks.org/upsert-in-mongodb/
+
+48) $pull : is the same as filter returns the array after removing the elements based on the given condition
+
+49) $pop : remove the first  or last item of array . -1 last , 1 for first
+
+50) $addToset : will not add dublictate value i.e will treat the array as set, while inserting
+
+General syntax -
+```
+db.<collection_name>.updateOne({},{$addToset:{field:value}});
+```
 ## Data Type limits in MongoDb
 
 MongoDB has a couple of hard limits - most importantly, a single document in a collection (including all embedded documents it might have) must be <=16mb. Additionally, you may only have 100 levels of embedded documents.
