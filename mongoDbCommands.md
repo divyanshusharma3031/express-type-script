@@ -472,7 +472,7 @@ db.users.updateOne(
 
 You can also use $each to insert more than 1 emebedded doc at once. 
 
-42) $inc and $dec : Suppopse you want to increment salary of all the people who have more than 2 yrs of experience by 10k . Then you can use the increment operator
+42) $inc : Suppopse you want to increment salary of all the people who have more than 2 yrs of experience by 10k . Then you can use the increment operator . passing a -ve value in the increment will decrement the result (obviously).
 Query : 
 ```
 db.users.updateMany({ exp: { $gt: 2 } }, { $inc: { salary: 10000 } });
@@ -519,6 +519,52 @@ General syntax -
 ```
 db.<collection_name>.updateOne({},{$addToset:{field:value}});
 ```
+
+51) To update all the elements of an array :
+for example in the users you want to decrease all the frequency in the hobbies array by 1, then there is a special place holder $[] for selecting .
+
+Here is the query : 
+
+```
+db.users.updateMany({}, { $inc: { "hobbies.$[].frequency": -1 } });
+```
+
+mongo doesn't allow <fieldNam>.$.<nestedField> for update queries.
+
+52) To update specifif field - suppose in the same document you want to add a field goodFrequency to true whereever there is hobbies.frequency > 2.
+
+The query  will be this :
+
+```
+db.users.updateMany(
+  { "hobbies.frequency": { $gt: 2 } },
+  { $set: { "hobbies.$[el].goodFrequency": true } },
+  { arrayFilters: [{ "el.frequency": { $gt: 2 } }] }
+);
+```
+here $[el] is a special operator( the name el is upto you but it should match in the arrayFilters)
+Now a third parameter is passed where you can have your condition here el will represent the element inside the array.
+
+Note that you can have a completely different filter for example you could set all the hobbies have a frequency greater than 
+2 have a field good frequency but be filtered where age is greater than 30 .
+
+```
+db.users.updateMany(
+  { "age": { $gt: 30 } },
+  { $set: { "hobbies.$[el].goodFrequency": true } },
+  { arrayFilters: [{ "el.frequency": { $gt: 2 } }] }
+);
+```
+
+## Delete Operations
+
+We have already discussed deleteOne() and deleteMany() , refer to documentation for more , It doesnt have much to it.
+
+53) Deleting all enteries in a collection :
+way 1 - db.<collection>.deleteMany() ✅ Mostly used in production.
+
+way 2 - db.<collection>.drop() ❌ rarely used in production code
+
 ## Data Type limits in MongoDb
 
 MongoDB has a couple of hard limits - most importantly, a single document in a collection (including all embedded documents it might have) must be <=16mb. Additionally, you may only have 100 levels of embedded documents.
